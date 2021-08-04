@@ -25,7 +25,6 @@ R_SOLAR = 6.957E10  # Solar radius in cm
 AU = 1.49598073E13  # Astronomical Unit in cm
 
 
-
 def t_func(r, wd):
     """
     The radial temperature function for a flat, optically thick disc. (1) from M. Jura 2003.
@@ -34,7 +33,7 @@ def t_func(r, wd):
     :param wd: A WhiteDwarf object
     :return t: The temperature of the annulus at r.
     """
-    #r = r*R_SOLAR
+    r = r*R_SOLAR
     t = (2/(3*np.pi))**(1/4) * (wd.radius/r)**(3/4) * wd.t_eff
 
     return t
@@ -43,9 +42,9 @@ def t_func(r, wd):
 def flux(freq, t_in, t_out, inc, wd):
     """
     Determines the flux from the disc using (3) from M. Jura 2003
+    :param freq: The frequency of the light
     :param t_in: The inner temperature of the disc
     :param t_out: The outer temperature of the disc
-    :param freq: The frequency of the light
     :param inc: The inclination of the disc
     :param wd: a WhiteDwarf object
     :return: The flux from the ring in mJy
@@ -66,30 +65,26 @@ def flux(freq, t_in, t_out, inc, wd):
     return f_ring
 
 
-def flux_int(r_in, r_out, freq, inc, wd):
+def flux_int(freq, r_in, r_out, inc, wd):
     """
 
-    :param r_in: The inner radius of the disc
-    :param r_out: The outer radius of the disc
-    :param freq: An array of frequencies
-    :param inc:
-    :param wd:
-    :return:
+    :param freq: An array of frequencies in Hz.
+    :param r_in: The inner radius of the disc in Solar radii.
+    :param r_out: The outer radius of the disc in Solar radii.
+    :param inc: The inclination of the disc in degrees.
+    :param wd: A White Dwarf object.
+    :return: An array of fluxes, in mJy
     """
-
-    r_in = r_in*R_SOLAR
-    r_out = r_out*R_SOLAR
+    r = np.linspace(r_in, r_out, 4000)
+    t_values = t_func(r, wd)
+    r = r*R_SOLAR  # Conversion to cm after the t_values have been obtained
 
     def planck(nu, t):
         # The Planck function
         return 2 * H_P * nu**3/(C**2) * 1/np.expm1(H_P * nu/(K_B * t))
 
-    r = np.linspace(r_in, r_out, 4000)
-    t_values = t_func(r, wd)
-
     fluxes = np.zeros(freq.size)
-
-    const = 2 * np.pi * np.cos(inc)/wd.distance**2
+    const = 2 * np.pi * np.cos(inc)/wd.distance**2  # Flux integration constant.
 
     for i, nu in enumerate(freq):
         integrand = planck(nu, t_values) * r
