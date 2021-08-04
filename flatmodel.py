@@ -34,13 +34,13 @@ def t_func(r, wd):
     :param wd: A WhiteDwarf object
     :return t: The temperature of the annulus at r.
     """
-    r = r*R_SOLAR
+    #r = r*R_SOLAR
     t = (2/(3*np.pi))**(1/4) * (wd.radius/r)**(3/4) * wd.t_eff
 
     return t
 
 
-def flux(t_in, t_out, freq, inc, wd):
+def flux(freq, t_in, t_out, inc, wd):
     """
     Determines the flux from the disc using (3) from M. Jura 2003
     :param t_in: The inner temperature of the disc
@@ -58,13 +58,24 @@ def flux(t_in, t_out, freq, inc, wd):
 
     A = 12*np.cbrt(np.pi)*(wd.radius/wd.distance)**2 * np.cos(inc) * ((2*K_B*wd.t_eff)/(3*H_P))**(8/3) * H_P/(C**2)
 
-    f_ring = A* np.cbrt(freq) * integrate.quad(integrand, x_in*freq, x_out*freq)[0]
-    f_ring = f_ring/1E-26
+    f_ring = np.zeros(freq.size)
+
+    for i in range(freq.size):
+        f_ring[i] = A*np.cbrt(freq[i])*integrate.quad(integrand, np.abs(x_in*freq[i]), np.abs(x_out*freq[i]))[0]/1E-26
 
     return f_ring
 
 
 def flux_int(r_in, r_out, freq, inc, wd):
+    """
+
+    :param r_in: The inner radius of the disc
+    :param r_out: The outer radius of the disc
+    :param freq: An array of frequencies
+    :param inc:
+    :param wd:
+    :return:
+    """
 
     r_in = r_in*R_SOLAR
     r_out = r_out*R_SOLAR
