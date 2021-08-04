@@ -1,0 +1,11 @@
+*.dat
+*.pdf
+*.dk
+*.pyc
+__pycache__/
+spectrumplot.py
+temperature_plot.py
+test.py
+test2.py
+.idea/
+.DS_Store

@@ -1,7 +1,8 @@
 """
-A class so that I don't have to use so many parameters in every single function
-because I lose track of them and it's annoying :(
+A class for stellar objects, useful for keeping track of parameters during modelling.
 
+Author: Jordan Iga, The University of Edinburgh
+        Imperial College London UROP Student
 """
 
 import numpy as np

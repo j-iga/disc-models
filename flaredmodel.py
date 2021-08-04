@@ -1,8 +1,9 @@
 """
-This is the ultimate disc model
-the disc model to beat all other discs
-and render every other model irrelevant
+A program containing functions useful for the modelling of flared accretion discs.
+Uses the results of E.Chiang et al. 2001. https://arxiv.org/abs/astro-ph/0009428
 
+Author: Jordan Iga, The University of Edinburgh
+        Imperial College London UROP Student
 """
 
 from scipy import integrate
@@ -17,20 +18,18 @@ G = 6.67430E-8  # Newton's constant of Gravitation in cm^3/s^2
 M_SOLAR = 1.989E33  # Solar Mass in grams
 PARSEC = 3.0857E18  # Parsec in cm
 R_SOLAR = 6.957E10  # Solar radius in cm
-AU = 1.49598073E13 # Astronomical Unit in cm
+AU = 1.49598073E13  # Astronomical Unit in cm
 
 
 def t_eq(r, gamma, h_ratio, t_c, phi, wd):
     """
     Equation (A1) from E.Chiang et al. 2001
 
-    :param t_i: The common temperature of all grains within the disc (assumed to be in thermal equilibrium).
     :param r: The distance from the WD.
     :param gamma: (A2) from E.Chiang et al. 2001.
     :param h_ratio: Visible photospheric height/gas scale height.
     :param t_c: A constant related to the WD's mass and radius.
     :param phi: A constant that is approximately 0.5
-    :param k_i: The opacity of the disc.
     :param wd: A WhiteDwarf object.
     :return:
     """
@@ -73,7 +72,6 @@ def get_t(r_in, r_out, gamma0, N, h_ratio, t_c, phi, wd):
     :param h_ratio: Visible photospheric height/gas scale height.
     :param t_c: A constant related to the WD's mass and radius.
     :param phi: A constant that is approximately 0.5
-    :param k_i: The opacity of the disc.
     :param wd: A WhiteDwarf object.
     :return: An array of temperatures for the disc, and an array of their respective distances.
     """
