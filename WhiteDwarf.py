@@ -17,7 +17,7 @@ PARSEC = 3.0857E18  # Parsec in cm
 R_SOLAR = 6.957E10  # Solar radius in cm
 
 
-class WhiteDwarf(object):
+class Star(object):
     """
     A class to define a white dwarf (WD) system.
 
