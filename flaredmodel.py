@@ -9,6 +9,7 @@ Author: Jordan Iga, The University of Edinburgh
 from scipy import integrate
 from scipy import optimize
 import numpy as np
+from Star import Star
 
 # UNIVERSAL CONSTANTS https://physics.nist.gov/cuu/Constants/
 C = 29979245800  # Speed of light in a vacuum (cm/s)
@@ -21,46 +22,33 @@ R_SOLAR = 6.957E10  # Solar radius in cm
 AU = 1.49598073E13  # Astronomical Unit in cm
 
 
-def t_eq(r, gamma, h_ratio, t_c, phi, wd):
+def t_eq(r, g, h, mu, phi, wd):
     """
     Equation (A1) from E.Chiang et al. 2001
 
     :param r: The distance from the WD.
-    :param gamma: (A2) from E.Chiang et al. 2001.
-    :param h_ratio: Visible photospheric height/gas scale height.
-    :param t_c: A constant related to the WD's mass and radius.
+    :param g: Gamma, (A2) from E.Chiang et al. 2001.
+    :param h: Visible photospheric height/gas scale height.
+    :param mu: The mean molecular density of the disc.
     :param phi: A constant that is approximately 0.5
-    :param wd: A WhiteDwarf object.
+    :param wd: A Star object.
     :return:
     """
-    r = r*R_SOLAR
+    #t = r
+    #r = r*R_SOLAR
+    t_c = G*Star.mass_cgs(wd)*mu/(K_B*Star.radius_cgs(wd))
 
-    a = h_ratio * np.sqrt(r/(t_c * wd.radius))
-    b = 4 * wd.radius/(3*np.pi*r)
-    c = (2/phi) * wd.t_eff**(-4) * (r/wd.radius)**2
-
-    def f_t(t_i):
-        f = np.sin(np.arctan(gamma * a * np.sqrt(t_i)) - np.arctan(a * np.sqrt(t_i)) + np.arcsin(b)) - (c * t_i**4)
+    def f_t(t):
+        f = np.sin(np.arctan(g*h*np.sqrt(t/t_c)*np.sqrt(r/wd.radius)) - np.arctan(h*np.sqrt(t/t_c)*np.sqrt(r/wd.radius))
+                   +np.arcsin(4/(3*np.pi) *wd.radius/r)) - (2/phi)*(t/wd.t_eff)**4 * (r/wd.radius)**2
         return f
 
-    temp = optimize.brentq(f_t, 0, 10000)
+    temp = optimize.brentq(f_t, 0, 3000)
 
     return temp
 
 
-def get_tc(wd, mu):
-    """
-
-    :param wd: A WhiteDwarf object.
-    :param mu: Another parameter
-    :return: t_c
-    """
-    t_c = G * wd.mass * mu/(K_B * wd.radius)
-
-    return t_c
-
-
-def get_t(r_in, r_out, gamma0, N, h_ratio, t_c, phi, wd):
+def get_t(r_in, r_out, gamma0, h_ratio, mu, phi, wd):
     """
     Implements the method of solving for T as described in the appendix of
     E.Chiang et al. 2001.
@@ -68,13 +56,13 @@ def get_t(r_in, r_out, gamma0, N, h_ratio, t_c, phi, wd):
     :param r_in: The inner radius of the disc.
     :param r_out: The outer radius of the disc.
     :param gamma0: The initial guess for gamma.
-    :param N: The number of distance steps.
     :param h_ratio: Visible photospheric height/gas scale height.
-    :param t_c: A constant related to the WD's mass and radius.
-    :param phi: A constant that is approximately 0.5
-    :param wd: A WhiteDwarf object.
+    :param mu: The mean molecular mass of the disc.
+    :param phi: A constant that is approximately 0.5.
+    :param wd: A Star object.
     :return: An array of temperatures for the disc, and an array of their respective distances.
     """
+    N = 400 # Number of distance steps
     gamma_i = gamma0
 
     radii = np.logspace(np.log10(r_in), np.log10(r_out), N)
@@ -82,20 +70,19 @@ def get_t(r_in, r_out, gamma0, N, h_ratio, t_c, phi, wd):
 
     for i in range(N):
         if i % 2 == 0:
-            t_i1 = t_eq(radii[i], gamma_i, h_ratio, t_c, phi, wd)
-            t_i2 = t_eq(radii[i+1], gamma_i, h_ratio, t_c, phi, wd)
-
+            t_i1 = t_eq(radii[i], gamma_i, h_ratio, mu, phi, wd)
+            t_i2 = t_eq(radii[i+1], gamma_i, h_ratio, mu, phi, wd)
             t_values[i] = t_i1
             t_values[i+1] = t_i2
 
-            gamma_i = (3 / 2) + (1 / 2) * np.log(t_i2 / t_i1) / np.log(radii[i+1] / radii[i])
+            gamma_i = (3/2) + (1 / 2) * np.log(t_i2 / t_i1) / np.log(radii[i+1] / radii[i])
 
     return radii, t_values
 
 
-def flux_int(r_in, r_out, freq, gamma, h_ratio, t_c, phi, wd):
+def flux_int(r_in, r_out, freq, gamma, h_ratio, mu, phi, wd):
 
-    r, t_values = get_t(r_in, r_out, gamma, 400, h_ratio, t_c, phi, wd)
+    r, t_values = get_t(r_in, r_out, gamma, h_ratio, mu, phi, wd)
     r = r*R_SOLAR
 
     def planck(nu, t):
@@ -104,7 +91,7 @@ def flux_int(r_in, r_out, freq, gamma, h_ratio, t_c, phi, wd):
 
     fluxes = np.zeros(freq.size)
 
-    const = 2 * np.pi / wd.distance**2
+    const = 2 * np.pi / Star.distance_cgs(wd)**2
 
     for i, nu in enumerate(freq):
         integrand = planck(nu, t_values) * r
