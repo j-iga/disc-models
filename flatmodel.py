@@ -12,6 +12,7 @@ Author: Jordan Iga, The University of Edinburgh
 
 import numpy as np
 from scipy import integrate
+from Star import Star
 
 
 # CONSTANTS
@@ -33,7 +34,6 @@ def t_func(r, wd):
     :param wd: A WhiteDwarf object
     :return t: The temperature of the annulus at r.
     """
-    r = r*R_SOLAR
     t = (2/(3*np.pi))**(1/4) * (wd.radius/r)**(3/4) * wd.t_eff
 
     return t
@@ -55,7 +55,7 @@ def flux(freq, t_in, t_out, inc, wd):
     x_in = H_P/(K_B*t_in)
     x_out = H_P/(K_B*t_out)
 
-    A = 12*np.cbrt(np.pi)*(wd.radius/wd.distance)**2 * np.cos(inc) * ((2*K_B*wd.t_eff)/(3*H_P))**(8/3) * H_P/(C**2)
+    A = 12*np.cbrt(np.pi)*(Star.radius_cgs(wd)/Star.distance_cgs(wd))**2 * np.cos(inc) * ((2*K_B*wd.t_eff)/(3*H_P))**(8/3) * H_P/(C**2)
 
     f_ring = np.zeros(freq.size)
 
@@ -84,7 +84,7 @@ def flux_int(freq, r_in, r_out, inc, wd):
         return 2 * H_P * nu**3/(C**2) * 1/np.expm1(H_P * nu/(K_B * t))
 
     fluxes = np.zeros(freq.size)
-    const = 2 * np.pi * np.cos(inc)/wd.distance**2  # Flux integration constant.
+    const = 2 * np.pi * np.cos(inc)/Star.distance_cgs(wd)**2  # Flux integration constant.
 
     for i, nu in enumerate(freq):
         integrand = planck(nu, t_values) * r
